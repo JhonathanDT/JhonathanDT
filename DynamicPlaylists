@@ -1,0 +1,313 @@
+/*
+Name: jhonathan tepan
+Email: jhonathan.tepan51@myhunter.cuny.edu 
+
+*/
+
+
+#include <iostream>
+
+using namespace std;
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include<bits/stdc++.h>
+using namespace std;
+
+int g_curr_size = 2;
+int g_number_of_songs = 0;
+
+string *g_song_names = new string[g_curr_size];
+string *g_artist_names = new string[g_curr_size];
+int *g_song_durations = new int[g_curr_size];
+string *g_genres = new string[g_curr_size];
+/*
+    @post             :   Replace the old global
+                          dynamically allocated arrays
+                          with new dynamically allocated
+                          arrays of twice the size 
+                          ('g_curr_size' * 2). Update
+                          'g_curr_size' accordingly.
+                          Make sure you copy the contents
+                          of the older arrays. Do this
+                          for the following global-arrays:
+                          'g_song_names', 'g_artist_names', 
+                          'g_song_durations', 'g_genres'
+*/
+void allocateNew(){
+    g_curr_size *= 2;
+    string *NEWg_song_names = new string[g_curr_size];
+    string *NEWg_artist_names = new string[g_curr_size];
+    int *NEWg_song_durations = new int[g_curr_size];
+    string *NEWg_genres = new string[g_curr_size];
+    
+    for(int i=0; i<g_number_of_songs;i++){
+        NEWg_song_names[i] = g_song_names[i];
+        NEWg_artist_names[i] = g_artist_names[i];
+        NEWg_song_durations[i] = g_song_durations[i];
+        NEWg_genres[i] = g_genres[i];
+    }
+        
+    delete []g_song_names;
+    delete []g_artist_names;
+    delete []g_song_durations;
+    delete []g_genres;
+    
+    g_song_names = NEWg_song_names;
+    g_artist_names = NEWg_artist_names;
+    g_song_durations = NEWg_song_durations;
+    g_genres = NEWg_genres;
+}
+
+void readSongs(string filename) {
+    ifstream input_file; 
+    input_file.open(filename); 
+
+    if (!input_file.is_open()) { 
+        cout << "Error opening file." << endl; 
+        return; 
+    }
+
+    string line_1; 
+    while (getline(input_file, line_1)) {
+
+        if (line_1.empty()) {
+            continue;
+        }
+
+
+        line_1 = line_1.substr(0, line_1.length() - 1);
+
+        string s_name = line_1.substr(0, line_1.find(":"));
+        string a_name = line_1.substr(line_1.find(":") + 1, line_1.find("-") - line_1.find(":") - 1);
+        string genre_1 = line_1.substr(line_1.find("-") + 1, line_1.find_last_of("-") - line_1.find("-") - 1);
+        int duration_1 = stoi(line_1.substr(line_1.find_last_of("-") + 1, line_1.find("mins") - line_1.find_last_of("-") - 1));
+
+        if (g_number_of_songs == g_curr_size) {
+            allocateNew();
+        }
+
+        g_song_names[g_number_of_songs] = s_name;
+        g_artist_names[g_number_of_songs] = a_name;
+        g_genres[g_number_of_songs] = genre_1;
+        g_song_durations[g_number_of_songs] = duration_1;
+
+        g_number_of_songs++;
+    }
+
+    input_file.close(); 
+}
+
+string * getGenreSongs(string genre, int &genreCount) 
+{
+string * genre_song1 =  new string[g_number_of_songs];
+genreCount = 0;
+for (int i = 0; i < g_number_of_songs; i++)
+{
+    if (g_genres[i]== genre)
+    {
+        genre_song1[genreCount] = g_song_names[i];
+        genreCount++;
+    }
+    
+}
+return genre_song1;
+
+
+}
+
+
+
+
+/*
+    @param duration             :   The integer duration of the songs
+    @param(&) durationsCount    :   An integer that will keep track of the number of songs
+    @param filter               :   An integer(0, 1 or 2) representing the comparision filter
+                                    0 = greater-than, 1 = less-than, 2 = equal-to
+    @return                     :   A pointer to a dynamically allocated array of strings 
+    @post                       :   Return a pointer to a dynamically allocated array of strings
+                                    of songs that are either greater-than, less-than or equal-to
+                                    the given 'duration' based on given 'filter'. Update parameter
+                                    'durationsCount' with the number of songs found. Return a 
+                                    pointer to an empty dynamically allocated array if no songs
+                                    are found with the given parameters
+
+    For example : Let's say we have the following 'g_song_names':
+                  ["Major Crimes", "Never Fade Away", "Circus Minimus", "4aem", "Reaktion"]
+
+                  Let's say we have the following 'g_song_durations':
+                  [3, 4, 3, 5, 2]
+
+                  We try the following code with the above global-arrays:
+                  int main(){
+                    int greater = 0;
+                    int less = 0;
+                    int equal = 0;
+                    string * longSongs = getSongsFromDuration(3, greater, 0);
+                    string * shortSongs = getSongsFromDuration(3, less, 1);
+                    string * mediumSongs = getSongsFromDuration(3, equal, 2);
+                  }
+
+                  After running the above code, 'longSongs' will be:
+                  ["Never Fade Away", "4aem"]
+                  The value of 'greater' will be 2 because there are two songs 
+                  greater than 3 mins duration
+
+                  Similarly, 'shortSongs' will be:
+                  ["Reaktion"]
+                  The value of 'less' will be 1 because there is only one song 
+                  less than 3 mins duration
+
+                  Finally, 'mediumSongs' will be:
+                  ["Major Crimes", "Circus Minimus"]
+                  The value of 'equal' will be 2 because there are 2 songs
+                  equal to 3 mins duration      
+*/
+string *getSongsFromDuration(int duration, int &durationsCount, int filter){
+   durationsCount = 0;
+   string * song_2 = new string[100];
+   for (int i = 0; i < g_number_of_songs; i++)
+   {
+    if (filter == 0 && g_song_durations[i]>duration)
+    {
+        song_2[durationsCount] = g_song_names[i];
+        durationsCount++;
+    }
+    else if (filter == 1 && g_song_durations[i]<duration)
+    {
+        song_2[durationsCount] = g_song_names[i];
+        durationsCount++;
+    }
+    else if (filter ==2 && g_song_durations[i] == duration )
+    {
+        song_2[durationsCount] = g_song_names[i];
+        durationsCount++;
+    }
+    
+   }
+   return song_2;
+   
+   
+  
+  
+}
+
+
+
+
+
+/*
+    @param      :   An integer that will keep track of unique artists
+    @return     :   A pointer to a dynamically allocated array of strings
+    @post       :   Return a pointer to a dynamically allocated array of strings
+                    containing the names of unique artists in 'g_artist_names'
+                    and update 'uniqueCount' parameter to be the number of
+                    unique artists found
+
+    For example : Let's say we have the following 'g_artist_names':
+                  ["Eminem", "Eminem", "Jay Z", "Jay Z", "Nas"]
+
+                  We try the following code with this 'g_artist_names':
+                  int main(){
+                    int count = 0;
+                    string * uniques = getUniqueArtists(count);
+                  }
+
+                  In this case, 'uniques' will be pointing to the following:
+                  ["Eminem", "Jay Z", "Nas"]
+                  The value of 'count' will be updated to 3 because there
+                  are three unique artists on the playlist
+*/
+string * getUniqueArtists(int &uniqueCount){
+    string * unique_artist1 =new string[g_number_of_songs];
+    uniqueCount = 0;
+    for (int i = 0; i < g_number_of_songs; i++)
+    {
+        bool is_duplicate = false;
+        for (int j = 0; j < uniqueCount; j++)
+        {
+            if (g_artist_names[i]==unique_artist1[j])
+            {
+                is_duplicate = true;
+                break;
+            }
+            
+        }
+        if (!is_duplicate)
+        {
+            unique_artist1[uniqueCount++] = g_artist_names[i];
+        }
+        
+        
+    }
+    if (uniqueCount == 0)
+    {
+        delete[] unique_artist1;
+        unique_artist1 = new string[0];
+    }
+    return unique_artist1;
+    
+    
+}
+/*
+    @return     :   A string with the artist with most songs in playlist
+    @post       :   Find the artist with the most songs in the playlist
+                    If there are multiple such artists, return any one of them.
+                    Return "NONE" if the playlist is empty
+
+    For example : Let's say we have the following 'g_artist_names':
+                  ["J. Cole", "J. Cole", "Kendrick", "Kendrick", "Kendrick"]
+                  The favorite artist here is "Kendrick" because he has 3 songs
+                  However, consider the following 'g_artist_names':
+                  ["J. Cole", "J. Cole", "Kendrick", "Kendrick", "Drake"]
+                  In this case, the favorite artist is either "J.Cole" or "Kendrick"
+                  because both artists have 2 songs which is greater than any
+                  other artists in the playlist
+*/
+string getFavoriteArtist(){
+    if (g_number_of_songs==0)
+    {
+        return "NONE";
+    }
+    string Favorite_Artist;
+
+    int favoriteartist_count = 0;
+    int current_count;
+
+    for (int i = 0; i < g_number_of_songs; i++)
+    {
+        current_count = 0;
+        for (int j = 0; j < g_number_of_songs; j++)
+        {
+            if (g_artist_names[i] == g_artist_names[j])
+            {
+                current_count++;
+            }
+            
+        }
+        if (current_count > favoriteartist_count)
+        {
+            favoriteartist_count = current_count;
+            Favorite_Artist = g_artist_names[i];
+        }
+        
+    }
+    return Favorite_Artist;
+    
+}
+
+int main()
+{
+    string fileName;
+    cout << "Enter the input filename: ";
+    cin >> fileName;
+    readSongs(fileName);
+    int count = 0;
+    string * genreSongs = getGenreSongs("HipHop", count);
+    cout<<genreSongs<<endl;
+    cout<<count<<endl;
+
+
+    return 0;
+}
